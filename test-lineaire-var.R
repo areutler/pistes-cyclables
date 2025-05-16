@@ -1,10 +1,19 @@
 library(tidyverse)
 library(osmdata)
 library(sf)
+library(aws.s3)
+library(sfarrow)
 
-TERRITOIRE <- "Var"
-CODE <- "83"
+# Niveau départemental pour OSM
 NIV_OSM <- 6
+
+# Boucle sur les départements
+# TERRITOIRE <- "Var" ;  CODE <- "83"
+TERRITOIRE <- "Ain" ; CODE <- "01"
+
+# Fichier à enregistrer
+BUCKET_OUT = "zg6dup"
+FILE_KEY_OUT_S3 = paste0("pistes_cyclables/lineaire", CODE, ".csv")
 
 # creation de la requete OSM pour les voiries
 requete_voirie <- getbb(TERRITOIRE) %>% 
@@ -39,6 +48,7 @@ territoire_polygone <-   territoire$osm_multipolygons %>%
 # base propre restreinte au territoire administratif
 base_OSM <- st_intersection(voirie_lignes, territoire_polygone)
 
+# Linéaires agrégés par cyclabilité, sens de circulation et qualité BANDE/PISTE
 base_cyclabilite <- base_OSM %>% #resultat48 %>% 
   filter(  
     # on ne retient que les voies potentiellement cyclables, par exemple ni autoroutes,
@@ -93,41 +103,9 @@ base_cyclabilite <- base_OSM %>% #resultat48 %>%
                                   TRUE ~ "AUTRE"))) %>%
   # on réunit alors les géométries pour simplifier les opérations suivantes
   group_by(cyclable,sens_velo,sens_voiture,qualite) %>%
-  summarise()
+  summarise(.groups = "drop")
 
-base_cyclabilite <- base_cyclabilite %>% ungroup()
-
-library(aws.s3)
-aws.s3::get_bucket("zg6dup", region = "")
-
-
-
-
-BUCKET_OUT = "zg6dup"
-FILE_KEY_OUT_S3 = "pistes_cyclables/lineaire_84.csv"
-
-write_parquet
-
-# ça ça marche
-aws.s3::s3write_using(
-  mtcars,
-  FUN = arrow::write_parquet,
-  object = "pistes_cyclables/mtcar.parquet",
-  bucket = BUCKET_OUT,
-  opts = list("region" = "")
-)
-
-
-
-aws.s3::s3write_using(
-  base_cyclabilite %>% head(1),
-  FUN = sf::st_write,
-  object = "pistes_cyclables/lineaire84.shp",
-  bucket = BUCKET_OUT,
-  opts = list("region" = "")
-)
-
-library(sfarrow)
+# Enregistrement
 aws.s3::s3write_using(
   base_cyclabilite,
   FUN = sfarrow::st_write_parquet,
