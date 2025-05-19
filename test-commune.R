@@ -18,9 +18,6 @@ communes_sf <- communes_osm$osm_multipolygons
 liste_communes <- communes_sf$name
 liste_codes_insee <- communes_sf$`ref:INSEE`
 
-
-liste_communes <- liste_communes[1:2]
-
 resultats <- list()
 for (i in seq_along(liste_communes)) {
   nom_commune <- liste_communes[i]
@@ -49,7 +46,7 @@ for (i in seq_along(liste_communes)) {
   longueur_voirie <- lignes_commune %>% 
     select(any_of(c("highway","oneway","bicycle", "cycleway" , "maxspeed", "longueur"))) %>%
     st_drop_geometry() %>% 
-    group_by(pick(everything())) %>% 
+    group_by(pick(-"longueur")) %>% 
     summarise(longueur = sum(longueur, na.rm = TRUE), .groups = "drop") %>%
     mutate(code = code_commune, commune = nom_commune, .before = 1)
 
