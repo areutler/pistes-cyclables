@@ -20,6 +20,8 @@ requete_voirie <- getbb(TERRITOIRE) %>%
   opq(timeout = 1000) %>% #augmenter le temps suivant message d'erreur
   add_osm_feature("highway")
 
+names(requete_voirie)
+
 # execution de la requete
 voirie <- osmdata_sf(requete_voirie) 
 
