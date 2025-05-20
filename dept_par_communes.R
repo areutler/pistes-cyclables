@@ -6,24 +6,38 @@ library(sf)
 library(aws.s3)
 library(arrow)
 
-# Récupère les objets "commune" dans le Bas-Rhin
-communes_osm <- opq("Bas-Rhin, France") %>%
+liste_dep_osm <- c(
+  "2A" = "Corse-du-Sud", # Bug
+  "68" = "Haut-Rhin",
+  "67" = "Bas-Rhin" # Fait
+)
+
+code_dep <- "2A"
+nom_dep <- paste0(liste_dep_osm[code_dep], ", France")
+
+# Récupère les objets "commune" dans le département
+communes_osm <- opq(nom_dep) %>%
   add_osm_feature(key = "boundary", value = "administrative") %>%
   add_osm_feature(key = "admin_level", value = "8") %>%
   osmdata_sf()
 
-# Extraire les polygones
-communes_sf <- communes_osm$osm_multipolygons
+# On ne garde que les communes dans le département
+communes_sf <- communes_osm$osm_multipolygons %>% 
+  filter(substr(`ref:INSEE`,1,2) == !!code_dep)
+
+# Visualiser :
+# communes_sf %>% st_union() %>% plot()
 
 # Codes et noms de commune
 liste_id <- communes_sf$osm_id
 liste_communes <- communes_sf$name
 liste_codes_insee <- communes_sf$`ref:INSEE`
 
-# Initialise le compteur
+# Initialise le compteur et la liste 
 compteur_traitement <- 0
+liste_resultats <- list()
 
-# resultats <- list()
+# Boucle sur les communes (peut être relancée si erreur)
 for (i in seq_along(liste_communes)) {
   
   # Passe les communes déjà traitées
@@ -34,9 +48,6 @@ for (i in seq_along(liste_communes)) {
   nom_commune <- liste_communes[i]
   code_commune <- liste_codes_insee[i]
   poly_commune <- communes_sf[i, ]
-  
-  # Supprimer
-  if(!nom_commune %in% c( "Seebach", "Friesenheim")) next
   
   message("Traitement ", i, "/", length(liste_communes), " : ", nom_commune, " osm_id = ", id)
   
@@ -85,13 +96,14 @@ for (i in seq_along(liste_communes)) {
 data_resultats <- bind_rows(liste_resultats)
 
 # Fichier à enregistrer
-BUCKET_OUT = "zg6dup"
+BUCKET <- "zg6dup"
+FILE <- paste0("pistes_cyclables/longueur_voirie_",code_dep ,".parquet")
 
 # Enregistrement
 aws.s3::s3write_using(
-  df_resultats,
+  data_resultats,
   FUN = arrow::write_parquet,
-  object = "pistes_cyclables/longueur_voirie_68_temp.parquet",
-  bucket = BUCKET_OUT,
+  object = FILE,
+  bucket = BUCKET,
   opts = list("region" = "")
 )
