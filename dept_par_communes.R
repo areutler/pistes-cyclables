@@ -23,9 +23,8 @@ liste_dep_osm <- c(
 )
 
 gc()
-
-# Fait 01, 2A, 2B, 67, 68
-code_dep <- "02"
+# Fait 01, 02, 03,"04", 2A, 2B, 67, 68
+code_dep <- "05"
 nom_dep <- paste0(liste_dep_osm[code_dep], ", France")
 
 # Refaire : 2A
@@ -56,7 +55,7 @@ liste_resultats <- list()
 for (i in seq_along(liste_communes)) {
   
   # Passe les communes déjà traitées
-  if(i < compteur_traitement) next
+  if(i <= compteur_traitement) next
   
   # Informations de la commune / du polygone
   id <- liste_id[i]
