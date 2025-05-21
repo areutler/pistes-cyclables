@@ -22,15 +22,15 @@ liste_dep_osm <- c(
   "974" = "La Réunion", "976" = "Mayotte"
 )
 
+# Fait 01 - 24, 35, 67, 68
+
 gc()
-# Fait 01, 02, 03,"04", 2A, 2B, 67, 68
-code_dep <- "05"
-nom_dep <- paste0(liste_dep_osm[code_dep], ", France")
+code_dep <- "25"
+message(code_dep, " ", liste_dep_osm[code_dep])
 
-# Refaire : 2A
-
-# Récupère les objets "commune" dans le département
-communes_osm <- opq(nom_dep) %>%
+# Récupère les objets "commune" dans le département "Nom-du-dépt, France"
+communes_osm <- paste0(liste_dep_osm[code_dep], ", France") %>%
+  opq() %>%
   add_osm_feature(key = "boundary", value = "administrative") %>%
   add_osm_feature(key = "admin_level", value = "8") %>%
   osmdata_sf()
@@ -64,7 +64,7 @@ for (i in seq_along(liste_communes)) {
   poly_commune <- communes_sf[i, ]
   
   # Communes buggée (à réessayer avec nouvelle version)
-  if(code_commune == "2B159") next
+  # if(code_commune == "2B159") next
   
   message("Traitement ", i, "/", length(liste_communes), " : ",  code_commune, " ", nom_commune)
   
@@ -134,3 +134,5 @@ aws.s3::s3write_using(
   bucket = BUCKET,
   opts = list("region" = "")
 )
+
+
