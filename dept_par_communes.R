@@ -22,10 +22,12 @@ liste_dep_osm <- c(
   "974" = "La Réunion", "976" = "Mayotte"
 )
 
-# Fait 01 - 24, 35, 67, 68
+# Fait 01 - 28 35, 67, 68
+
+# Amélioration de la méthode à partir de 26
 
 gc()
-code_dep <- "25"
+code_dep <- "28"
 message(code_dep, " ", liste_dep_osm[code_dep])
 
 # Récupère les objets "commune" dans le département "Nom-du-dépt, France"
@@ -70,25 +72,32 @@ for (i in seq_along(liste_communes)) {
   
   # Requête OSM sur la bbox de la commune
   req <- opq(bbox = st_bbox(poly_commune), timeout = 1000) %>%
-    add_osm_feature(key = "highway") %>%
-    osmdata_sf()
+    add_osm_feature(key = "highway")
   
+  # On essaie deux fois pour réduire le risque d'erreur 
+  req <- tryCatch(
+    expr = {req %>% osmdata_sf() }, 
+    error = function(e) {
+      message("... Deuxième tentative...")
+      req %>% osmdata_sf() 
+    }
+  )
+
   lignes <- req$osm_lines
   
   # Intersection : en cas d'erreur on corrige avec st_make_valid + st_buffer
   lignes_commune <- tryCatch({
     st_intersection(lignes, poly_commune)
     }, error = function(e) {
-      
-      # Nétoyage avec st_make_valid
+      message("... Nétoyage avec st_make_valid()...")
       poly_commune <- st_make_valid(poly_commune)
       lignes_commune <- tryCatch({
         st_intersection(lignes, poly_commune)
       }, error = function(e) {
-        
         # Nétoyage avec st_buffer
+        message("... Nétoyage avec st_buffer()...")
         poly_commune <- st_buffer(poly_commune, 0)
-        return(lignes_commune)
+        return(st_intersection(lignes, poly_commune))
       })
     return(lignes_commune)
   })
