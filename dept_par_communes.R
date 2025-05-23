@@ -22,13 +22,17 @@ liste_dep_osm <- c(
   "974" = "La Réunion", "976" = "Mayotte"
 )
 
-# Fait 01 - 28 35, 67, 68
+# Fait 01 - 38, 67, 68
 
 # Amélioration de la méthode à partir de 26
 
 gc()
-code_dep <- "28"
+code_dep <- "40"
 message(code_dep, " ", liste_dep_osm[code_dep])
+
+# Fichier à enregistrer
+BUCKET <- "zg6dup"
+FILE <- paste0("pistes_cyclables/longueur_voirie_",code_dep ,".parquet")
 
 # Récupère les objets "commune" dans le département "Nom-du-dépt, France"
 communes_osm <- paste0(liste_dep_osm[code_dep], ", France") %>%
@@ -130,10 +134,6 @@ for (i in seq_along(liste_communes)) {
 
 # Résultat final
 data_resultats <- bind_rows(liste_resultats)
-
-# Fichier à enregistrer
-BUCKET <- "zg6dup"
-FILE <- paste0("pistes_cyclables/longueur_voirie_",code_dep ,".parquet")
 
 # Enregistrement
 aws.s3::s3write_using(
