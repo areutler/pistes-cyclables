@@ -26,9 +26,9 @@ liste_dep_osm <- c(
 # Fait 01 - 44, 67, 68
 
 # Amélioration de la méthode à partir de 26
-
-code_dep <- "44"
-for(code_dep in c("971","972", "973", "974", "976")) {
+liste_code_dep <- names(liste_dep_osm)[19:27]
+liste_code_dep <- "18"
+for(code_dep in liste_code_dep) {
 # for(code_dep in c("26","27")) {
   
   gc()
@@ -88,7 +88,13 @@ for(code_dep in c("971","972", "973", "974", "976")) {
       expr = {req %>% osmdata_sf() }, 
       error = function(e) {
         message("... Deuxième tentative...")
-        req %>% osmdata_sf() 
+        tryCatch(
+          expr = {req %>% osmdata_sf() }, 
+          error = function(e) {
+            message("... Troisième tentative...")
+            req %>% osmdata_sf() 
+          }
+        )
       }
     )
     
