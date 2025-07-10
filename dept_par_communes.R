@@ -1,4 +1,5 @@
-# Test commune
+# Récupérer les longueurs des voies par commune et les informations utiles
+# pour reconstituer les pistes et les bandes cyclables
 
 library(tidyverse)
 library(osmdata)
