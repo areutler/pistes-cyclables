@@ -1,6 +1,9 @@
 # Récupérer les longueurs des voies par commune et les informations utiles
 # pour reconstituer les pistes et les bandes cyclables
 
+
+to_do <- 21:30
+
 library(tidyverse)
 library(osmdata)
 library(sf)
@@ -27,7 +30,7 @@ liste_dep_osm <- c(
 # Fait 01 - 44, 67, 68
 
 # Amélioration de la méthode à partir de 26
-liste_code_dep <- names(liste_dep_osm)[11:20]
+liste_code_dep <- names(liste_dep_osm)[to_do]
 # code_dep <- liste_code_dep[1] # Pour tester
 for(code_dep in liste_code_dep) {
   # for(code_dep in c("26","27")) {
