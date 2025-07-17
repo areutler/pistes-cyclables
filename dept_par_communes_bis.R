@@ -2,7 +2,7 @@
 # Récupérer les longueurs des voies par commune et les informations utiles
 # pour reconstituer les pistes et les bandes cyclables
 
-to_do <- 51:60
+to_do <- 1:20
 
 library(tidyverse)
 library(osmdata)
@@ -29,6 +29,7 @@ liste_dep_osm <- c(
 
 # Traitements
 liste_code_dep <- names(liste_dep_osm)[to_do]
+
 message("Traitements de ", names(liste_dep_osm[to_do[1]]), 
         " à ", names(liste_dep_osm[to_do[length(to_do)]]))
 
@@ -135,28 +136,29 @@ for(code_dep in liste_code_dep) {
     # Calcul des longueurs par type
     lignes_commune$longueur <- st_length(lignes_commune)
     
-    # Visualiser
+    # Visualiser / colonnes dispo
     # plot(lignes_commune)
+    # lignes_commune %>% 
+    #   select(-starts_with("name."), - starts_with("source."),- starts_with("was."),
+    #          -starts_with("parking."), - starts_with("traffic"), -starts_with("old")) %>% names()
+    
     
     # Colonnes par défaut potentiellement utiles
     cols_defaut <- c("network","tracktype","surface","smoothness","motor_vehicle",
                      "highway","oneway","maxspeed", "access")
     
-    # Colonnes contenant la chaîne de caractère cycle
-    cols_cycles_complete <- lignes_commune %>% 
-      select(contains("cycle")) %>% colnames()
+    # Sélection a priori pour le vélo
+    cols_cycles <- c("bicycle","cycleway.both","cycleway.left","cycleway.right","cycleway", "oneway.bicycle")
     
-    # On restreint à une sélection plus réduite
-    cols_cycles <- c("bicycle","cycleway.both","cycleway.left","cycleway.right","cycleway")
-    
-    # Colonne non trouvées
-    # setdiff(cols_defaut,colnames(lignes_commune))
+    # Au cas ou, on ajotue toutes les variables commençant par cycleway
+    cols_cyleway <- lignes_commune %>% st_drop_geometry() %>% select(starts_with("cycleway")) %>% 
+      names() %>% setdiff(cols_cycles)
     
     # Longueur selon le type de voirie
     longueur_voirie <- lignes_commune %>% 
       
       # Variables utiles
-      select(any_of(c(cols_defaut , cols_cycles, "longueur"))) %>%
+      select(any_of(c(cols_defaut , cols_cycles,  cols_cyleway, "longueur"))) %>%
       st_drop_geometry() %>%
       
       # Longueur selon la description de la voirie
