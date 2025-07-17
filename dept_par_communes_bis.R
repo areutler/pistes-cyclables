@@ -1,8 +1,8 @@
+# MAIN
 # Récupérer les longueurs des voies par commune et les informations utiles
 # pour reconstituer les pistes et les bandes cyclables
 
-
-to_do <- 21:30
+to_do <- 51:60
 
 library(tidyverse)
 library(osmdata)
@@ -27,10 +27,11 @@ liste_dep_osm <- c(
   "974" = "La Réunion", "976" = "Mayotte"
 )
 
-# Fait 01 - 44, 67, 68
-
-# Amélioration de la méthode à partir de 26
+# Traitements
 liste_code_dep <- names(liste_dep_osm)[to_do]
+message("Traitements de ", names(liste_dep_osm[to_do[1]]), 
+        " à ", names(liste_dep_osm[to_do[length(to_do)]]))
+
 # code_dep <- liste_code_dep[1] # Pour tester
 for(code_dep in liste_code_dep) {
   # for(code_dep in c("26","27")) {
