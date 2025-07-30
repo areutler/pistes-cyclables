@@ -1,6 +1,16 @@
-# MAIN
-# Récupérer les longueurs des voies par commune et les informations utiles
-# pour reconstituer les pistes et les bandes cyclables
+################################################################################
+#
+# Récupérer les informations utiles pour reconstituer les pistes et les bandes 
+# cyclables par commune
+#
+# Programme exécuté sur le cloud du Service Statstique Publique
+#
+# - Interroge Open Street Map
+# - Récupère une longueur de voie par commune selon tous les croisements 
+#   des principales variables permettant d'identifier qu'une voie est 
+#   cyclable ou non
+#
+################################################################################
 
 to_do <- 1:20
 
@@ -185,4 +195,3 @@ for(code_dep in liste_code_dep) {
     opts = list("region" = "")
   )
 }
-
