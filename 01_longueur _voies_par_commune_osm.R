@@ -1,18 +1,25 @@
-####################################################################################################
+################################################################################
 #
-# Extraction des longueurs de voie par commune et par département
-# Ne marche pas sur AUS (lancé avec le sspcloud)
+# Récupérer les informations utiles pour reconstituer les pistes et les bandes
+# cyclables par commune
 #
-####################################################################################################
+# Programme exécuté sur le cloud du Service Statstique Publique
+#
+# - Interroge Open Street Map
+# - Récupère une longueur de voie par commune selon tous les croisements
+#   des principales variables permettant d'identifier qu'une voie est
+#   cyclable ou non
+#
+################################################################################
 
-# Librairies
+to_do <- 1:20
+
 library(tidyverse)
 library(osmdata)
 library(sf)
 library(aws.s3)
 library(arrow)
 
-# Départements et noms
 liste_dep_osm <- c(
   "01" = "Ain", "02" = "Aisne", "03" = "Allier", "04" = "Alpes-de-Haute-Provence", "05" = "Hautes-Alpes", "06" = "Alpes-Maritimes", "07" = "Ardèche", "08" = "Ardennes",
   "09" = "Ariège", "10" = "Aube", "11" = "Aude", "12" = "Aveyron", "13" = "Bouches-du-Rhône", "14" = "Calvados", "15" = "Cantal", "16" = "Charente", "17" = "Charente-Maritime",
@@ -30,13 +37,15 @@ liste_dep_osm <- c(
   "974" = "La Réunion", "976" = "Mayotte"
 )
 
-# Warning : amélioration de la méthode à partir du département 26
+# Traitements
+liste_code_dep <- names(liste_dep_osm)[to_do]
 
-## Indiquer les départements sur lesquels on veut faire tourner la boucle ici
-liste_dep <- c("2A","2B")
+message("Traitements de ", names(liste_dep_osm[to_do[1]]),
+        " à ", names(liste_dep_osm[to_do[length(to_do)]]))
 
-# Boucle sur les départements
-for(code_dep in liste_dep) {
+# code_dep <- liste_code_dep[1] # Pour tester
+for(code_dep in liste_code_dep) {
+  # for(code_dep in c("26","27")) {
 
   gc()
 
@@ -69,8 +78,10 @@ for(code_dep in liste_dep) {
   compteur_traitement <- 0
   liste_resultats <- list()
 
-  # Boucle sur les communes d'un département
-  # Cette boucle peut être relancée si erreur d'open street map
+  # Pour tester
+  # i <- 1
+
+  # Boucle sur les communes (peut être relancée si erreur)
   for (i in seq_along(liste_communes)) {
 
     # Passe les communes déjà traitées
@@ -96,11 +107,20 @@ for(code_dep in liste_dep) {
       expr = {req %>% osmdata_sf() },
       error = function(e) {
         message("... Deuxième tentative...")
-        req %>% osmdata_sf()
+        tryCatch(
+          expr = {req %>% osmdata_sf() },
+          error = function(e) {
+            message("... Troisième tentative...")
+            req %>% osmdata_sf()
+          }
+        )
       }
     )
 
     lignes <- req$osm_lines
+
+    # Visualiser
+    # plot(lignes)
 
     # Intersection : en cas d'erreur on corrige avec st_make_valid + st_buffer
     lignes_commune <- tryCatch({
@@ -126,11 +146,29 @@ for(code_dep in liste_dep) {
     # Calcul des longueurs par type
     lignes_commune$longueur <- st_length(lignes_commune)
 
+    # Visualiser / colonnes dispo
+    # plot(lignes_commune)
+    # lignes_commune %>%
+    #   select(-starts_with("name."), - starts_with("source."),- starts_with("was."),
+    #          -starts_with("parking."), - starts_with("traffic"), -starts_with("old")) %>% names()
+
+
+    # Colonnes par défaut potentiellement utiles
+    cols_defaut <- c("network","tracktype","surface","smoothness","motor_vehicle",
+                     "highway","oneway","maxspeed", "access")
+
+    # Sélection a priori pour le vélo
+    cols_cycles <- c("bicycle","cycleway.both","cycleway.left","cycleway.right","cycleway", "oneway.bicycle")
+
+    # Au cas ou, on ajotue toutes les variables commençant par cycleway
+    cols_cyleway <- lignes_commune %>% st_drop_geometry() %>% select(starts_with("cycleway")) %>%
+      names() %>% setdiff(cols_cycles)
+
     # Longueur selon le type de voirie
     longueur_voirie <- lignes_commune %>%
 
       # Variables utiles
-      select(any_of(c("highway","oneway","bicycle", "cycleway" , "maxspeed", "longueur"))) %>%
+      select(any_of(c(cols_defaut , cols_cycles,  cols_cyleway, "longueur"))) %>%
       st_drop_geometry() %>%
 
       # Longueur selon la description de la voirie
