@@ -33,7 +33,7 @@ data <- data %>%
     voie_routiere =  as.factor(case_when(
 
       # ROUTIER POTENTIELLEMENT CYCLABLE d'après le tag highway
-      highway %in% c("trunk", "living_street", "primary", "secondary", "residential", "service", "road","busway") ~
+      highway %in% c("trunk", "living_street", "primary", "secondary", "residential", "service","busway") ~
         "ROUTIER POTENTIELLEMENT CYCLABLE",
 
       # ROUTIER POTENTIELLEMENT CYCLABLE avec un highway moins routier mais des infos complémentaire
