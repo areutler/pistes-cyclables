@@ -38,7 +38,7 @@ data <- data %>%
 
       # ROUTIER POTENTIELLEMENT CYCLABLE avec un highway moins routier mais des infos complémentaire
       highway %in% c("tertiary", "unclassified") &
-        (motor_vehicle == "yes"| tracktype == "grade1" | surface %in% c("asphalt", "paving_stones", "chipseal", "concrete") | smoothness %in% c("excellent", "good")) ~
+        (motor_vehicle == "yes"| tracktype == "grade1" | surface %in% c("asphalt", "chipseal", "concrete") | smoothness %in% c("excellent", "good")) ~
         "ROUTIER POTENTIELLEMENT CYCLABLE",
 
       # NON POTENTIELLEMENT CYCLABLE
